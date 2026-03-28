@@ -86,6 +86,10 @@ class ATAppsViewController: UITableViewController {
 			name: .heartbeat,
 			object: nil
 		)
+		
+		DispatchQueue.main.async {
+			NotificationCenter.default.post(name: .heartbeat, object: nil)
+		}
 	}
 	
 	// MARK: Actions
@@ -107,14 +111,19 @@ class ATAppsViewController: UITableViewController {
 	}
 	
 	@objc func reloadAction() {
-		_didLoad = false
-		HeartbeatManager.shared.start(true)
+		if HeartbeatManager.shared.isRsd {
+			_didLoad = false
+			listApplicationsAction()
+		} else {
+			_didLoad = false
+			HeartbeatManager.shared.start(true)
+		}
 	}
 	
 	@objc func listApplicationsAction() {
 		guard !_didLoad else { return }
 		_didLoad = true
-
+		
 		Task {
 			do {
 				try await appsManager.listApps()
@@ -122,7 +131,7 @@ class ATAppsViewController: UITableViewController {
 				await MainActor.run {
 					UIAlertController.showAlertWithOk(
 						title: nil,
-						message: error.localizedDescription,
+						message: "\(error)",
 						action: {
 							HeartbeatManager.shared.start(true)
 						}

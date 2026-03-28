@@ -18,8 +18,11 @@ struct ATTunnelView: View {
     var body: some View {
 		List {
 			Section {
-				_tunnelInfo()
-				TunnelHeaderView()
+				if #available(iOS 17.4, *) {
+				} else {
+					_tunnelInfo()
+					TunnelHeaderView()
+				}
 			} footer: {
 				if doesHavePairingFile {
 					Text(.localized("Seems like you've gotten your hands on your pairing file!"))
@@ -32,16 +35,20 @@ struct ATTunnelView: View {
 				Button(.localized("Import Pairing File"), systemImage: "square.and.arrow.down") {
 					_isImportingPairingPresenting = true
 				}
-				Button(.localized("Restart Heartbeat"), systemImage: "arrow.counterclockwise") {
-					HeartbeatManager.shared.start(true)
-					
-					DispatchQueue.global(qos: .userInitiated).async {
-						if !HeartbeatManager.shared.checkSocketConnection().isConnected {
-							DispatchQueue.main.async {
-								UIAlertController.showAlertWithOk(
-									title: "Socket",
-									message: .localized("Unable to connect to TCP. Make sure you have loopback VPN enabled and you are on WiFi or Airplane mode.")
-								)
+				
+				if #available(iOS 17.4, *) {
+				} else {
+					Button(.localized("Restart Heartbeat"), systemImage: "arrow.counterclockwise") {
+						HeartbeatManager.shared.start(true)
+						
+						DispatchQueue.global(qos: .userInitiated).async {
+							if !HeartbeatManager.shared.checkSocketConnection().isConnected {
+								DispatchQueue.main.async {
+									UIAlertController.showAlertWithOk(
+										title: "Socket",
+										message: .localized("Unable to connect to TCP. Make sure you have loopback VPN enabled and you are on WiFi or Airplane mode.")
+									)
+								}
 							}
 						}
 					}
@@ -88,6 +95,12 @@ struct ATTunnelView: View {
 		try? fileManager.removeItem(at: dest)
 		try? fileManager.copyItem(at: url, to: dest)
 		
-		HeartbeatManager.shared.start(true)
+		if HeartbeatManager.shared.isRsd {
+			DispatchQueue.main.async {
+				NotificationCenter.default.post(name: .heartbeat, object: nil)
+			}
+		} else {
+			HeartbeatManager.shared.start(true)
+		}
 	}
 }

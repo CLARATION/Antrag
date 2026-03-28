@@ -10,7 +10,4 @@
    <FileRef
       location = "container:Antrag.xcodeproj">
    </FileRef>
-   <FileRef
-      location = "absolute:/Users/samara/Documents/Repositories/Antrag/IDeviceKit">
-   </FileRef>
 </Workspace>
